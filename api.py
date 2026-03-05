@@ -1,3 +1,5 @@
+import os
+print("Files in directory:", os.listdir("."))  # ✅ debug line
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -33,4 +35,4 @@ async def suggest(request: SuggestRequest):
 
 @app.get("/")
 async def root():
-    return FileResponse("index.html")  # ✅ serves your frontend
+    return FileResponse(os.path.join(os.path.dirname(__file__), "index.html"))
