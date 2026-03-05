@@ -63,7 +63,7 @@
       document.getElementById("loader").classList.remove("hidden");
 
       try {
-        const res = await fetch("https://research-chatbot-f1jh.onrender.com/research", {
+        const res = await fetch("research", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: input })
@@ -85,7 +85,7 @@
 
     async function fetchSuggestions(topic, summary) {
       try {
-        const res = await fetch("https://research-chatbot-f1jh.onrender.com/suggest", {
+        const res = await fetch("/suggest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ topic, summary })

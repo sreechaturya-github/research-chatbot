@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from main import run_agent, suggest_questions  # ✅ single import at top
+from main import run_agent, suggest_questions
 
 app = FastAPI()
 
@@ -31,4 +33,4 @@ async def suggest(request: SuggestRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "Research chatbot API is running!"}
+    return FileResponse("index.html")  # ✅ serves your frontend
