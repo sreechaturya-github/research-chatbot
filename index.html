@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Research Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center p-6">
+
+  <div class="w-full max-w-2xl">
+    <h1 class="text-3xl font-bold text-center mb-2 text-indigo-400">🔍 Research Chatbot</h1>
+    <p class="text-center text-gray-400 mb-6 text-sm">Ask anything. Powered by LLaMA + Wikipedia.</p>
+
+    <!-- Input -->
+    <div class="flex gap-2 mb-4">
+      <input
+        id="queryInput"
+        type="text"
+        placeholder="e.g. What is quantum computing?"
+        class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+      <button
+        id="micBtn"
+        onclick="startVoice()"
+        title="Speak your query"
+        class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-lg transition text-xl"
+      >🎙️</button>
+      <button
+        onclick="sendQuery()"
+        class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-semibold transition"
+      >Ask</button>
+    </div>
+
+    <!-- Suggested Questions -->
+    <div id="suggestions" class="hidden mb-6">
+      <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Follow-up questions</p>
+      <div id="chips" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loader" class="hidden text-center text-gray-400 mb-4 animate-pulse">Researching...</div>
+
+    <!-- Result -->
+    <div id="result" class="hidden bg-gray-800 border border-gray-700 rounded-xl p-6">
+      <span class="text-xs text-indigo-400 uppercase font-semibold">Summary</span>
+      <p id="summary" class="text-gray-300 mt-2 leading-relaxed"></p>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="hidden text-red-400 text-center mt-4"></div>
+  </div>
+
+  <script>
+    async function sendQuery(query = null) {
+      const input = query || document.getElementById("queryInput").value.trim();
+      if (!input) return;
+
+      document.getElementById("queryInput").value = input;
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("error").classList.add("hidden");
+      document.getElementById("suggestions").classList.add("hidden");
+      document.getElementById("loader").classList.remove("hidden");
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: input })
+        });
+        const data = await res.json();
+
+        document.getElementById("summary").textContent = data.summary;
+        document.getElementById("result").classList.remove("hidden");
+
+        fetchSuggestions(data.topic, data.summary);
+
+      } catch (err) {
+        document.getElementById("error").textContent = "Something went wrong. Is the backend running?";
+        document.getElementById("error").classList.remove("hidden");
+      } finally {
+        document.getElementById("loader").classList.add("hidden");
+      }
+    }
+
+    async function fetchSuggestions(topic, summary) {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/suggest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic, summary })
+        });
+        const data = await res.json();
+        renderChips(data.questions);
+      } catch (err) {
+        console.error("Could not load suggestions.");
+      }
+    }
+
+    function renderChips(questions) {
+      const chips = document.getElementById("chips");
+      chips.innerHTML = "";
+      questions.forEach(q => {
+        const btn = document.createElement("button");
+        btn.textContent = q;
+        btn.className = "bg-gray-700 hover:bg-indigo-600 text-sm text-gray-200 px-4 py-2 rounded-full transition";
+        btn.onclick = () => sendQuery(q);
+        chips.appendChild(btn);
+      });
+      document.getElementById("suggestions").classList.remove("hidden");
+    }
+
+    function startVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Your browser doesn't support voice search. Try Chrome.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+
+      const micBtn = document.getElementById("micBtn");
+      micBtn.textContent = "🔴";
+      micBtn.disabled = true;
+
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("queryInput").value = transcript;
+        micBtn.textContent = "🎤";
+        micBtn.disabled = false;
+        sendQuery(transcript);
+      };
+
+      recognition.onerror = () => {
+        micBtn.textContent = "🎤";
+        micBtn.disabled = false;
+        alert("Could not detect voice. Please try again.");
+      };
+
+      recognition.onend = () => {
+        micBtn.textContent = "🎤";
+        micBtn.disabled = false;
+      };
+    }
+
+    document.getElementById("queryInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") sendQuery();
+    });
+  </script>
+
+</body>
+</html>
