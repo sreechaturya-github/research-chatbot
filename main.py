@@ -19,14 +19,15 @@ llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
 parser = PydanticOutputParser(pydantic_object=ResearchResponse)
 
 def run_agent(query: str) -> ResearchResponse:
-    # Step 1: fetch Wikipedia context directly
     wiki_result = wiki.run(query)
 
-    # Step 2: send context + query to LLM and ask for structured response
     prompt = (
-        f"You are a research assistant. Use the following Wikipedia context to answer the query.\n\n"
+        f"You are a knowledgeable research assistant. Answer the following query using your own knowledge "
+        f"and the Wikipedia context provided. Do NOT say the information is not in the context — "
+        f"use your general knowledge to fill in any gaps.\n\n"
         f"Query: {query}\n\n"
-        f"Wikipedia Context:\n{wiki_result}\n\n"
+        f"Wikipedia Context (use as reference, not as a limit):\n{wiki_result}\n\n"
+        f"If the query asks for a list (like top 5, best 10, etc.), always provide a proper numbered list in the summary.\n\n"
         f"Respond ONLY with a JSON object, no extra text, no markdown:\n"
         + parser.get_format_instructions()
     )
