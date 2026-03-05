@@ -7,3 +7,6 @@ langchain-groq        # ← ADD THIS
 langgraph             # ← ADD THIS
 python-dotenv
 pydantic
+fastapi
+uvicorn
+pydantic
