@@ -63,7 +63,7 @@
       document.getElementById("loader").classList.remove("hidden");
 
       try {
-        const res = await fetch("research", {
+        const res = await fetch("/research", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: input })
