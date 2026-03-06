@@ -7,7 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center p-6">
-
+  <!-- Splash Screen -->
+<div id="splash" class="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center z-50">
+  <h1 class="text-3xl font-bold text-indigo-400 mb-4">🔍 Research Chatbot</h1>
+  <p class="text-gray-400 text-sm animate-pulse">Waking up the server, please wait...</p>
+  <div class="mt-6 w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+</div>
   <div class="w-full max-w-2xl">
     <h1 class="text-3xl font-bold text-center mb-2 text-indigo-400">🔍 Research Chatbot</h1>
     <p class="text-center text-gray-400 mb-6 text-sm">Ask anything. Powered by LLaMA + Wikipedia.</p>
@@ -52,6 +57,20 @@
   </div>
 
   <script>
+    // Wake up backend and hide splash when ready
+async function wakeUpBackend() {
+  while (true) {
+    try {
+      const res = await fetch("/");
+      if (res.ok) {
+        document.getElementById("splash").style.display = "none";
+        break;
+      }
+    } catch (e) {}
+    await new Promise(r => setTimeout(r, 2000)); // retry every 2 seconds
+  }
+}
+wakeUpBackend();
     async function sendQuery(query = null) {
       const input = query || document.getElementById("queryInput").value.trim();
       if (!input) return;
